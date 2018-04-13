@@ -28,6 +28,7 @@ function Board(){
         ctx.drawImage(this.img,this.x + canvas.width,this.y,this.width,this.height);
     };
     this.drawScore = function(){
+        this.score = Math.floor(frames / 60);
         ctx.font = "50px Avenir";
         ctx.fillStyle = "orange";
         ctx.fillText(this.score,this.width/2, this.y+50);
@@ -50,12 +51,20 @@ function Flappy(){
         //bliss hack por huevon
         this.y += 1;
         ctx.drawImage(this.img,this.x,this.y,this.width,this.height);
+        //esto es una validación
+        if(this.y < 0 || this.y > canvas.height - this.height) gameOver();
     };
 
     this.move = function(){
        this.y -= 50;
-    }
+    };
 
+    this.isTouching = function(pipe){
+return (this.x < pipe.x + pipe.width) &&
+       (this.x + this.width > pipe.x) &&
+       (this.y < pipe.y + pipe.height) &&
+       (this.y + this.height > pipe.y);
+    };
 }
 
 //pipes
@@ -97,6 +106,25 @@ function drawPipes(){
     });
 }
 
+function gameOver(){
+    stop();
+    ctx.font = "120px courier";
+    ctx.strokeStyle = "orange";
+    ctx.lineWidth = 8;
+    ctx.strokeText("Game Over", 50,200);
+    ctx.font = "50px Avenir";
+    ctx.fillStyle = "black";
+    ctx.fillText('press R to start', 50, 300);
+}
+
+//funcion de validacion
+function checkCollition(){
+    pipes.forEach(function(pipe){
+     if(flappy.isTouching(pipe)) gameOver();
+    });
+}
+
+
 //main functions
 function update(){
     generatePipes();
@@ -106,16 +134,23 @@ function update(){
     board.draw();
     flappy.draw();
     drawPipes();
-    board.drawScore();
+    board.drawScore()
+    //esto esta bien?
+    checkCollition();
 }
 function start(){
-    board.music.play();
     //si ya esta corriendo return
     if(intervalo > 0) return;
     //extras que necesitemos inicializar
     intervalo = setInterval(function(){
         update();
     }, 1000/60);
+    //esto no deberia estar aqui:
+    flappy.y = 150;
+    pipes = [];
+    board.score = 0;
+    frames = 0;
+    board.music.play();
 }
 
 function stop(){
@@ -128,14 +163,14 @@ function stop(){
 //listeners (observadores)
 
 //comienza el juego
-document.getElementById('startButton')
-    .addEventListener('click', start);
-
 document.getElementById('pauseButton')
     .addEventListener('click', stop);
 
 addEventListener('keydown', function(e){
     if(e.keyCode === 32){
         flappy.move();
+    }
+    if(e.keyCode === 82){
+        start();
     }
 });
