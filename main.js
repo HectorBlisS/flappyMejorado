@@ -10,6 +10,8 @@ function Board(){
     this.img = new Image();
     this.img.src = "http://ellisonleao.github.io/clumsy-bird/data/img/bg.png"
     this.score = 0;
+    this.music = new Audio();
+    this.music.src = "./assets/mario.mp3";
 
     this.img.onload = function(){
         this.draw();
@@ -23,12 +25,13 @@ function Board(){
     this.draw = function(){
         this.move();
         ctx.drawImage(this.img, this.x,this.y, this.width,this.height);
-        ctx.drawImage(this.img,this.x + canvas.width,this.y,this.width,this.height)
+        ctx.drawImage(this.img,this.x + canvas.width,this.y,this.width,this.height);
+    };
+    this.drawScore = function(){
         ctx.font = "50px Avenir";
         ctx.fillStyle = "orange";
         ctx.fillText(this.score,this.width/2, this.y+50);
-
-    }
+    };
 } //end of Board
 
 //flappy
@@ -55,23 +58,58 @@ function Flappy(){
 
 }
 
+//pipes
+function Pipe(y, height) {
+    this.x = canvas.width; //cambia esto
+    this.y = y;
+    this.width = 50;
+    this.height = height;
+
+    this.draw = function(){
+        this.x--;
+        ctx.fillStyle = "green";
+        ctx.fillRect(this.x,this.y,this.width,this.height);
+    }
+}
 
 //declaraciones
 var board = new Board();
 var flappy = new Flappy();
+var pipes = [];
 
 var intervalo;
 var frames = 0;
 
+//aux functions
+function generatePipes(){
+    if(!(frames % 300 === 0)) return;
+    var ventanita = 150;
+    var randomHeight = Math.floor(Math.random() * 200) + 50;
+    var pipe = new Pipe(0,randomHeight);
+    var pipe2 = new Pipe(randomHeight + ventanita, canvas.height - (randomHeight + ventanita));
+    pipes.push(pipe);
+    pipes.push(pipe2);
+}
+
+function drawPipes(){
+    pipes.forEach(function(pipe){
+        pipe.draw();
+    });
+}
+
 //main functions
 function update(){
+    generatePipes();
     frames++;
     console.log(frames);
     ctx.clearRect(0,0,canvas.width, canvas.height);
     board.draw();
     flappy.draw();
+    drawPipes();
+    board.drawScore();
 }
 function start(){
+    board.music.play();
     //si ya esta corriendo return
     if(intervalo > 0) return;
     //extras que necesitemos inicializar
@@ -83,6 +121,7 @@ function start(){
 function stop(){
     clearInterval(intervalo);
     intervalo = 0;
+    board.music.pause();
 }
 
 
